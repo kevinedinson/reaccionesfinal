@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Comentarios</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%);
+            padding: 20px;
+            color: #1a1a1a;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0a3d2c 0%, #10b981 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .comment-form {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #0a3d2c 0%, #10b981 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(10, 61, 44, 0.3);
+        }
+
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .comments-section {
+            padding: 24px;
+        }
+
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .comments-count {
+            font-weight: 600;
+            color: #374151;
+            font-size: 18px;
+        }
+
+        .comment {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .comment:hover {
+            border-color: #10b981;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a3d2c, #10b981);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .comment-info {
+            flex: 1;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 15px;
+        }
+
+        .comment-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .comment-content {
+            margin-bottom: 12px;
+            color: #374151;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn:hover {
+            background: #e5e7eb;
+            color: #1a1a1a;
+        }
+
+        .action-btn.liked {
+            color: #10b981;
+        }
+
+        .reply-section {
+            margin-left: 52px;
+            margin-top: 12px;
+        }
+
+        .reply {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .reply .avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+        }
+
+        .reply-form {
+            margin-left: 52px;
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #10b981;
+        }
+
+        .reply-form textarea {
+            min-height: 60px;
+            margin-bottom: 8px;
+        }
+
+        .reply-form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn-small {
+            padding: 6px 16px;
+            font-size: 13px;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .load-more {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .delete-btn {
+            color: #ef4444;
+        }
+
+        .delete-btn:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .mention {
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .link {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .comment.new {
+            animation: slideIn 0.3s ease;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .reply-section, .reply-form {
+                margin-left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💬 Growty Community</h1>
+            <p>Comparte, aprende y crece junto a otros emprendedores</p>
+        </div>
+
+        <div class="comment-form">
+            <div id="userWelcome" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px; background: white; border-radius: 8px;">
+                    <div class="avatar" id="userAvatar"></div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #1a1a1a;" id="welcomeName"></div>
+                        <div style="font-size: 13px; color: #6b7280;" id="welcomeEmail"></div>
+                    </div>
+                    <button class="btn btn-small btn-secondary" onclick="logout()">Cambiar usuario</button>
+                </div>
+            </div>
+            <form id="mainCommentForm">
+                <div id="registrationFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Nombre *</label>
+                            <input type="text" id="name" required placeholder="Tu nombre completo">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" required placeholder="tu@email.com">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Comentario *</label>
+                    <textarea id="comment" required placeholder="Comparte tus ideas, preguntas o experiencias... Usa @ para mencionar a otros"></textarea>
+                </div>
+                <button type="submit" class="btn">Publicar Comentario</button>
+            </form>
+        </div>
+
+        <div class="comments-section">
+            <div class="comments-header">
+                <div class="comments-count" id="commentsCount">0 comentarios</div>
+            </div>
+            <div id="commentsList"></div>
+            <div id="loadMoreContainer" style="display: none;" class="load-more">
+                <button class="btn" id="loadMoreBtn">Cargar más comentarios</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // CONFIGURACIÓN DE FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlocDzDw2rhIvW-lt5cV7gmQ4kmDe393E",
+            authDomain: "reacciones-prueba.firebaseapp.com",
+            databaseURL: "https://reacciones-prueba-default-rtdb.firebaseio.com",
+            projectId: "reacciones-prueba",
+            storageBucket: "reacciones-prueba.firebasestorage.app",
+            messagingSenderId: "992096700723",
+            appId: "1:992096700723:web:08e7947bd30e2c34a55646"
+        };
+
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, push, onValue, remove, update, query, orderByChild, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const commentsRef = ref(database, 'comments');
+
+        let currentUser = JSON.parse(localStorage.getItem('commentUser')) || null;
+        let displayedComments = 10;
+        let allComments = [];
+
+        // Función para mostrar/ocultar campos de registro
+        function updateUserInterface() {
+            const registrationFields = document.getElementById('registrationFields');
+            const userWelcome = document.getElementById('userWelcome');
+            
+            if (currentUser) {
+                registrationFields.style.display = 'none';
+                userWelcome.style.display = 'block';
+                document.getElementById('userAvatar').textContent = getInitials(currentUser.name);
+                document.getElementById('welcomeName').textContent = currentUser.name;
+                document.getElementById('welcomeEmail').textContent = currentUser.email;
+            } else {
+                registrationFields.style.display = 'block';
+                userWelcome.style.display = 'none';
+            }
+        }
+
+        // Función para cerrar sesión
+        window.logout = () => {
+            if (confirm('¿Quieres cambiar de usuario? Tus comentarios anteriores permanecerán.')) {
+                localStorage.removeItem('commentUser');
+                currentUser = null;
+                document.getElementById('name').value = '';
+                document.getElementById('email').value = '';
+                updateUserInterface();
+            }
+        };
+
+        // Función para obtener iniciales
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        // Función para formatear fecha
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'Justo ahora';
+            if (minutes < 60) return `Hace ${minutes} min`;
+            if (hours < 24) return `Hace ${hours}h`;
+            if (days < 7) return `Hace ${days}d`;
+            return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+        }
+
+        // Procesar texto con menciones y enlaces
+        function processText(text) {
+            // Convertir menciones @usuario
+            text = text.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+            
+            // Convertir URLs en enlaces
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            text = text.replace(urlRegex, '<a href="$1" class="link" target="_blank">$1</a>');
+            
+            return text;
+        }
+
+        // Función para renderizar comentarios
+        function renderComments(comments) {
+            const commentsList = document.getElementById('commentsList');
+            const commentsToShow = comments.slice(0, displayedComments);
+            
+            if (commentsToShow.length === 0) {
+                commentsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💭</div>
+                        <p>Sé el primero en comentar y comenzar la conversación</p>
+                    </div>
+                `;
+                return;
+            }
+
+            commentsList.innerHTML = commentsToShow.map(comment => `
+                <div class="comment ${comment.isNew ? 'new' : ''}" data-id="${comment.id}">
+                    <div class="comment-header">
+                        <div class="avatar">${getInitials(comment.name)}</div>
+                        <div class="comment-info">
+                            <div class="comment-author">${comment.name}</div>
+                            <div class="comment-meta">
+                                <span>${formatDate(comment.timestamp)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comment-content">${processText(comment.text)}</div>
+                    <div class="comment-actions">
+                        <button class="action-btn ${comment.liked ? 'liked' : ''}" onclick="toggleLike('${comment.id}')">
+                            ${comment.liked ? '❤️' : '🤍'} ${comment.likes || 0}
+                        </button>
+                        <button class="action-btn" onclick="showReplyForm('${comment.id}')">
+                            💬 Responder
+                        </button>
+                        ${comment.email === currentUser?.email ? `
+                            <button class="action-btn delete-btn" onclick="deleteComment('${comment.id}')">
+                                🗑️ Eliminar
+                            </button>
+                        ` : ''}
+                    </div>
+                    ${comment.replies ? `
+                        <div class="reply-section">
+                            ${Object.entries(comment.replies).map(([replyId, reply]) => `
+                                <div class="reply comment" data-id="${replyId}">
+                                    <div class="comment-header">
+                                        <div class="avatar">${getInitials(reply.name)}</div>
+                                        <div class="comment-info">
+                                            <div class="comment-author">${reply.name}</div>
+                                            <div class="comment-meta">
+                                                <span>${formatDate(reply.timestamp)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="comment-content">${processText(reply.text)}</div>
+                                    <div class="comment-actions">
+                                        <button class="action-btn ${reply.liked ? 'liked' : ''}" onclick="toggleReplyLike('${comment.id}', '${replyId}')">
+                                            ${reply.liked ? '❤️' : '🤍'} ${reply.likes || 0}
+                                        </button>
+                                        ${reply.email === currentUser?.email ? `
+                                            <button class="action-btn delete-btn" onclick="deleteReply('${comment.id}', '${replyId}')">
+                                                🗑️ Eliminar
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    <div id="replyForm-${comment.id}"></div>
+                </div>
+            `).join('');
+
+            // Mostrar/ocultar botón "Cargar más"
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+            if (comments.length > displayedComments) {
+                loadMoreContainer.style.display = 'block';
+            } else {
+                loadMoreContainer.style.display = 'none';
+            }
+
+            // Actualizar contador
+            document.getElementById('commentsCount').textContent = 
+                `${comments.length} comentario${comments.length !== 1 ? 's' : ''}`;
+        }
+
+        // Enviar comentario principal
+        document.getElementById('mainCommentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let name, email;
+            
+            if (currentUser) {
+                name = currentUser.name;
+                email = currentUser.email;
+            } else {
+                name = document.getElementById('name').value.trim();
+                email = document.getElementById('email').value.trim();
+                
+                if (!name || !email) return;
+                
+                currentUser = { name, email };
+                localStorage.setItem('commentUser', JSON.stringify(currentUser));
+                updateUserInterface();
+            }
+            
+            const text = document.getElementById('comment').value.trim();
+            if (!text) return;
+
+            await push(commentsRef, {
+                name,
+                email,
+                text,
+                timestamp: Date.now(),
+                likes: 0
+            });
+
+            document.getElementById('comment').value = '';
+            document.getElementById('mainCommentForm').querySelector('.btn').textContent = 'Comentario publicado ✓';
+            setTimeout(() => {
+                document.getElementById('mainCommentForm').querySelector('.btn').textContent = 'Publicar Comentario';
+            }, 2000);
+        });
+
+        // Mostrar formulario de respuesta
+        window.showReplyForm = (commentId) => {
+            const replyFormContainer = document.getElementById(`replyForm-${commentId}`);
+            if (replyFormContainer.innerHTML) {
+                replyFormContainer.innerHTML = '';
+                return;
+            }
+
+            replyFormContainer.innerHTML = `
+                <div class="reply-form">
+                    <textarea id="replyText-${commentId}" placeholder="Escribe tu respuesta..." required></textarea>
+                    <div class="reply-form-actions">
+                        <button class="btn btn-small btn-secondary" onclick="document.getElementById('replyForm-${commentId}').innerHTML = ''">Cancelar</button>
+                        <button class="btn btn-small" onclick="submitReply('${commentId}')">Responder</button>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Enviar respuesta
+        window.submitReply = async (commentId) => {
+            const text = document.getElementById(`replyText-${commentId}`).value.trim();
+            if (!text || !currentUser) return;
+
+            const replyRef = ref(database, `comments/${commentId}/replies`);
+            await push(replyRef, {
+                name: currentUser.name,
+                email: currentUser.email,
+                text,
+                timestamp: Date.now(),
+                likes: 0
+            });
+
+            document.getElementById(`replyForm-${commentId}`).innerHTML = '';
+        };
+
+        // Toggle like
+        window.toggleLike = async (commentId) => {
+            const comment = allComments.find(c => c.id === commentId);
+            const hasLiked = localStorage.getItem(`liked-${commentId}`);
+            
+            const commentRef = ref(database, `comments/${commentId}`);
+            if (hasLiked) {
+                await update(commentRef, { likes: (comment.likes || 1) - 1 });
+                localStorage.removeItem(`liked-${commentId}`);
+            } else {
+                await update(commentRef, { likes: (comment.likes || 0) + 1 });
+                localStorage.setItem(`liked-${commentId}`, 'true');
+            }
+        };
+
+        // Toggle like en respuesta
+        window.toggleReplyLike = async (commentId, replyId) => {
+            const comment = allComments.find(c => c.id === commentId);
+            const reply = comment.replies[replyId];
+            const hasLiked = localStorage.getItem(`liked-${commentId}-${replyId}`);
+            
+            const replyRef = ref(database, `comments/${commentId}/replies/${replyId}`);
+            if (hasLiked) {
+                await update(replyRef, { likes: (reply.likes || 1) - 1 });
+                localStorage.removeItem(`liked-${commentId}-${replyId}`);
+            } else {
+                await update(replyRef, { likes: (reply.likes || 0) + 1 });
+                localStorage.setItem(`liked-${commentId}-${replyId}`, 'true');
+            }
+        };
+
+        // Eliminar comentario
+        window.deleteComment = async (commentId) => {
+            if (!confirm('¿Estás seguro de que quieres eliminar este comentario?')) return;
+            await remove(ref(database, `comments/${commentId}`));
+        };
+
+        // Eliminar respuesta
+        window.deleteReply = async (commentId, replyId) => {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta respuesta?')) return;
+            await remove(ref(database, `comments/${commentId}/replies/${replyId}`));
+        };
+
+        // Cargar más comentarios
+        document.getElementById('loadMoreBtn').addEventListener('click', () => {
+            displayedComments += 10;
+            renderComments(allComments);
+        });
+
+        // Escuchar cambios en tiempo real
+        onValue(commentsRef, (snapshot) => {
+            const data = snapshot.val() || {};
+            allComments = Object.entries(data)
+                .map(([id, comment]) => ({
+                    id,
+                    ...comment,
+                    liked: localStorage.getItem(`liked-${id}`) === 'true',
+                    replies: comment.replies ? Object.fromEntries(
+                        Object.entries(comment.replies).map(([replyId, reply]) => [
+                            replyId,
+                            {
+                                ...reply,
+                                liked: localStorage.getItem(`liked-${id}-${replyId}`) === 'true'
+                            }
+                        ])
+                    ) : null
+                }))
+                .sort((a, b) => b.timestamp - a.timestamp);
+            
+            renderComments(allComments);
+        });
+
+        // Inicializar interfaz de usuario
+        updateUserInterface();
+    </script>
+</body>
+</html>
