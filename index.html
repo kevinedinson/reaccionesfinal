@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget de Reacciones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: transparent;
+            padding: 20px;
+        }
+
+        .reactions-container {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .reaction-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 70px;
+        }
+
+        .reaction-button:hover {
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .reaction-button.voted {
+            border-color: #3b82f6;
+            background: #dbeafe;
+        }
+
+        .emoji {
+            font-size: 32px;
+            line-height: 1;
+        }
+
+        .count {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .loading {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .reaction-button.animate {
+            animation: pop 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="reactions-container" id="reactionsContainer">
+        <div class="loading">Cargando reacciones...</div>
+    </div>
+
+    <script type="module">
+        // CONFIGURACIÓN DE FIREBASE
+        // Reemplaza estos valores con tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlocDzDw2rhIvW-ll5cV7gmQ4kmDe393E",
+            authDomain: "reacciones-prueba.firebaseapp.com",
+            databaseURL: "https://reacciones-prueba-default-rtdb.firebaseio.com",
+            projectId: "reacciones-prueba",
+            storageBucket: "reacciones-prueba.firebasestorage.app",
+            messagingSenderId: "992096700723",
+            appId: "1:992096700723:web:08e7947bd30e2c34a55646"
+        };
+
+        // Importar Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue, set, get, runTransaction } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Emojis de reacciones
+        const reactions = [
+            { emoji: '👍', id: 'like' },
+            { emoji: '❤️', id: 'love' },
+            { emoji: '😄', id: 'happy' },
+            { emoji: '😮', id: 'wow' },
+            { emoji: '😢', id: 'sad' },
+            { emoji: '😡', id: 'angry' }
+        ];
+
+        // ID único para este widget (puedes cambiarlo si quieres múltiples widgets)
+        const widgetId = 'widget-1';
+        const reactionsRef = ref(database, `reactions/${widgetId}`);
+
+        // Verificar voto previo en localStorage
+        const getStoredVote = () => {
+            return localStorage.getItem(`reaction-vote-${widgetId}`);
+        };
+
+        const setStoredVote = (reactionId) => {
+            localStorage.setItem(`reaction-vote-${widgetId}`, reactionId);
+        };
+
+        const removeStoredVote = () => {
+            localStorage.removeItem(`reaction-vote-${widgetId}`);
+        };
+
+        // Renderizar reacciones
+        function renderReactions(counts) {
+            const container = document.getElementById('reactionsContainer');
+            container.innerHTML = '';
+
+            const currentVote = getStoredVote();
+
+            reactions.forEach(reaction => {
+                const count = counts[reaction.id] || 0;
+                const button = document.createElement('div');
+                button.className = 'reaction-button';
+                if (currentVote === reaction.id) {
+                    button.classList.add('voted');
+                }
+
+                button.innerHTML = `
+                    <div class="emoji">${reaction.emoji}</div>
+                    <div class="count">${count}</div>
+                `;
+
+                button.addEventListener('click', () => handleReaction(reaction.id));
+                container.appendChild(button);
+            });
+        }
+
+        // Manejar click en reacción
+        async function handleReaction(reactionId) {
+            const currentVote = getStoredVote();
+            const reactionRef = ref(database, `reactions/${widgetId}/${reactionId}`);
+
+            try {
+                if (currentVote === reactionId) {
+                    // Si ya votó por esta, quitar voto
+                    await runTransaction(reactionRef, (current) => {
+                        return Math.max(0, (current || 0) - 1);
+                    });
+                    removeStoredVote();
+                } else {
+                    // Si había votado por otra, restar de la anterior
+                    if (currentVote) {
+                        const oldReactionRef = ref(database, `reactions/${widgetId}/${currentVote}`);
+                        await runTransaction(oldReactionRef, (current) => {
+                            return Math.max(0, (current || 0) - 1);
+                        });
+                    }
+                    
+                    // Agregar voto a la nueva
+                    await runTransaction(reactionRef, (current) => {
+                        return (current || 0) + 1;
+                    });
+                    setStoredVote(reactionId);
+                }
+
+                // Animación
+                const buttons = document.querySelectorAll('.reaction-button');
+                buttons.forEach(btn => {
+                    if (btn.querySelector('.emoji').textContent === reactions.find(r => r.id === reactionId).emoji) {
+                        btn.classList.add('animate');
+                        setTimeout(() => btn.classList.remove('animate'), 300);
+                    }
+                });
+            } catch (error) {
+                console.error('Error al registrar reacción:', error);
+            }
+        }
+
+        // Escuchar cambios en tiempo real
+        onValue(reactionsRef, (snapshot) => {
+            const counts = snapshot.val() || {};
+            renderReactions(counts);
+        });
+
+        // Inicializar contadores si no existen
+        get(reactionsRef).then((snapshot) => {
+            if (!snapshot.exists()) {
+                const initialCounts = {};
+                reactions.forEach(r => initialCounts[r.id] = 0);
+                set(reactionsRef, initialCounts);
+            }
+        });
+    </script>
+</body>
+</html>
